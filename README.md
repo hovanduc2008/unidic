@@ -11,6 +11,7 @@ Method: POST
     email
     password
 ]
+-
 -Login: http://localhost:3500/user/login
 Method: POST
 [
