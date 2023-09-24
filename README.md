@@ -3,7 +3,7 @@ PORT: 3500
 
 Route: 
 
--Register: http://localhost:3500/user/login
+-Register: http://localhost:3500/user/register
 -Method: POST
 
 -    firstname
@@ -23,4 +23,4 @@ Route:
 -Method: GET
 
 -Logout: http://localhost:3500/user/logout
-Method: GET
+-Method: GET
