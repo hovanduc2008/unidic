@@ -5,7 +5,10 @@ const cookieOptions = require('../config/cookieOptions')
 const User = require('../models/UserModel')
 const {generateRefreshToken} = require('../config/refreshToken')
 const {generateAccessToken} = require('../config/accessToken');
-const validateMongoDBId = require('../ultils/validateMongoDBId')
+const validateMongoDBId = require('../ultils/validateMongoDBId');
+
+
+const { paginate, picker } = require('../config/common');
 
 
 
@@ -108,9 +111,14 @@ const logoutUser = asyncHandler (async (req, res) => {
 // Get All Users
 const getAllUsers = asyncHandler(async (req, res) => {
     try {
-        const allUsers = await User.find();
-        if(!allUsers || allUsers.length < 1) return res.sendError(404);
-        res.json(allUsers);
+        const page = parseInt(req.query.page) || 1;
+        const perPage = parseInt(req.query.perpage) || 10;
+
+        const result = await paginate(User, {}, page, perPage, picker([]));
+
+        if(!result || result.data.length < 1) return res.status(404).json({ message: 'Không tìm thấy dữ liệu.' });
+        
+        return res.json(result);
     }catch (err) {
         throw new Error(err);
     }

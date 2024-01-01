@@ -14,6 +14,11 @@ const connectDB = require('./config/dbConn')
 
 const PORT = process.env.PORT || 3500;
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
+
+const { Server } = require("socket.io");
+const io = new Server(server);
 
 // Logger
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'logs', 'access.log'), { flags: 'a' })
@@ -43,6 +48,9 @@ app.use(cookieParser());
 
 // Route
 app.use('/user', require('./routes/authRoute'));
+app.use('/video', require('./routes/videoRoute'));
+app.use('/image', require('./routes/imageRoute'));
+app.use('/audio', require('./routes/audioRoute'));
 app.use(verifyJWT);
 app.use('/', require('./routes/root'));
 
@@ -62,6 +70,10 @@ app.all('*', (req, res) => {
 })
 
 app.use(errorHandler);
+
+io.on('connection', (socket) => {
+    console.log('a user connected');
+});
 
 mongoose.connection.once("open", () => {
     console.log("Connected to MongoDB");

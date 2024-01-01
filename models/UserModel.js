@@ -49,6 +49,18 @@ const userSchema = new mongoose.Schema({
 }
 )
 
+const disable = "-password -refreshToken";
+
+userSchema.pre('find', function(next) {
+    this.select(disable); // Loại bỏ các trường 'password' và 'refreshToken'
+    next();
+});
+
+userSchema.pre('findOne', function(next) {
+    this.select(disable); // Loại bỏ các trường 'password' và 'refreshToken'
+    next();
+});
+
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) {
       next();
