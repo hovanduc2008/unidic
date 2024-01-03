@@ -5,10 +5,12 @@ const verifyJWT = require('../middlewares/verifyJWT');
 const verifyRoles = require('../middlewares/verifyRoles');
 
 const {
-    generateAudiofromText
+    generateAudiofromText,
+    generateTextFromAudio
 } 
 = require('../controllers/audioController');
 
-router.post('/generate', generateAudiofromText);
+router.post('/tts', generateAudiofromText);
+router.post('/stt', generateTextFromAudio);
 
 module.exports = router;

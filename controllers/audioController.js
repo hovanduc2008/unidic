@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 require('dotenv').config();
+const FormData = require('form-data');
 
 const Audio = require('../models/AudioModel')
 const SPEECH_TO_TEXT = '';
@@ -44,7 +45,47 @@ const generateAudiofromText = asyncHandler(async (req, res) => {
       res.status(500).send('Đã xảy ra lỗi khi chuyển đổi văn bản thành âm thanh.');
     }
 })
+const generateTextFromAudio = asyncHandler(async (req, res) => {
+  try {
+    const voice = req.body.voice ?? 'myan';
+    const speed = req.body.speed ?? 0;
+    const format = req.body.format ?? 'mp3';
+
+    // Create a new FormData instance
+    const formData = new FormData();
+
+    // Append the audio file to FormData
+    if (!req.body.audioFile) {
+      return res.status(400).send('Vui lòng cung cấp tệp âm thanh.');
+    }
+    formData.append('audioFile', req.body.audioFile);
+
+    // Append other fields to FormData
+    formData.append('voice', voice);
+    formData.append('speed', speed.toString());
+    formData.append('format', format);
+    formData.append('X-TTS-NoCache', 'true');
+
+    // Send POST request with FormData
+    const response = await axios.post('https://api.fpt.ai/hmi/tts/v5', formData, {
+      headers: {
+        ...formData.getHeaders(),
+        'api_key': TEXT_TO_SPEECH
+      }
+    });
+
+    // Handle response as needed
+    console.log(response.data);
+    return res.json(response.data);
+  } catch (error) {
+    console.error('Lỗi:', error);
+    res.status(500).send('Đã xảy ra lỗi khi chuyển đổi văn bản thành âm thanh.');
+  }
+});
+
+
 
 module.exports = {
-    generateAudiofromText
+    generateAudiofromText,
+    generateTextFromAudio
 }
