@@ -1,53 +1,67 @@
 const asyncHandler = require('express-async-handler');
-const ArticleModel = require('../models/ArticleModel'); // Đường dẫn tới model của bạn
+const ArticleModel = require('../models/ArticleModel'); // Điều chỉnh đường dẫn dựa trên cấu trúc thư mục của bạn
 
 // CREATE: Thêm mới một bài viết
 const createArticle = asyncHandler(async (req, res) => {
-  const article = new ArticleModel(req.body);
+  const { title, description, content, slug, thumbnail, image, category } = req.body;
+  
+  const article = new ArticleModel({ title, description, content, slug, thumbnail, image, category });
   await article.save();
+  
   res.status(201).json(article);
 });
 
-// READ: Lấy tất cả bài viết
+// READ: Lấy tất cả các bài viết
 const getArticles = asyncHandler(async (req, res) => {
-  const articles = await ArticleModel.find().populate('category'); // Populate category information
+  const articles = await ArticleModel.find().populate('category', 'name'); // Populate category information
   res.json(articles);
 });
 
-// READ: Lấy một bài viết cụ thể bằng ID
+// READ: Lấy một bài viết theo ID
 const getArticleById = asyncHandler(async (req, res) => {
-  const article = await ArticleModel.findById(req.params.id).populate('category'); // Populate category information
+  const { id } = req.params;
+  const article = await ArticleModel.findById(id).populate('category', 'name'); // Populate category information
+  
   if (!article) {
     return res.status(404).json({ error: 'Article not found' });
   }
+  
   res.json(article);
 });
 
 // UPDATE: Cập nhật thông tin một bài viết
 const updateArticle = asyncHandler(async (req, res) => {
-  const article = await ArticleModel.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  }).populate('category'); // Populate category information
-  if (!article) {
+  const { id } = req.params;
+  const { title, description, content, slug, thumbnail, image, category } = req.body;
+  
+  const updateData = { title, description, content, slug, thumbnail, image, category, updatedAt: Date.now() };
+  
+  const updatedArticle = await ArticleModel.findByIdAndUpdate(id, updateData, { new: true }).populate('category', 'name'); // Populate category information
+  
+  if (!updatedArticle) {
     return res.status(404).json({ error: 'Article not found' });
   }
-  res.json(article);
+  
+  res.json(updatedArticle);
 });
 
 // DELETE: Xóa một bài viết
 const deleteArticle = asyncHandler(async (req, res) => {
-  const article = await ArticleModel.findByIdAndDelete(req.params.id);
-  if (!article) {
+  const { id } = req.params;
+  
+  const deletedArticle = await ArticleModel.findByIdAndDelete(id);
+  
+  if (!deletedArticle) {
     return res.status(404).json({ error: 'Article not found' });
   }
+  
   res.json({ message: 'Article deleted successfully' });
 });
 
 module.exports = {
-    createArticle,
-    getArticles,
-    getArticleById,
-    updateArticle,
-    deleteArticle
+  createArticle,
+  getArticles,
+  getArticleById,
+  updateArticle,
+  deleteArticle,
 };
