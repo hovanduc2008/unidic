@@ -1,11 +1,20 @@
+const slugify = require('slugify');
+
 const asyncHandler = require('express-async-handler');
 const ArticleModel = require('../models/ArticleModel'); // Điều chỉnh đường dẫn dựa trên cấu trúc thư mục của bạn
 
 // CREATE: Thêm mới một bài viết
 const createArticle = asyncHandler(async (req, res) => {
-  const { title, description, content, slug, thumbnail, image, category } = req.body;
-  
+  const { title, description, content, thumbnail, image, category } = req.body;
+
+  // Tạo slug từ title sử dụng slugify
+  const slug = slugify(title, {
+    lower: true,  // Chuyển đổi slug thành chữ thường
+    remove: /[*+~.()'"!:@]/g  // Loại bỏ các ký tự không mong muốn khỏi slug
+  });
+
   const article = new ArticleModel({ title, description, content, slug, thumbnail, image, category });
+  
   await article.save();
   
   res.status(201).json(article);
@@ -32,8 +41,14 @@ const getArticleById = asyncHandler(async (req, res) => {
 // UPDATE: Cập nhật thông tin một bài viết
 const updateArticle = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, description, content, slug, thumbnail, image, category } = req.body;
+  const { title, description, content, thumbnail, image, category } = req.body;
   
+  // Tạo lại slug từ title sử dụng slugify
+  const slug = slugify(title, {
+    lower: true,  // Chuyển đổi slug thành chữ thường
+    remove: /[*+~.()'"!:@]/g  // Loại bỏ các ký tự không mong muốn khỏi slug
+  });
+
   const updateData = { title, description, content, slug, thumbnail, image, category, updatedAt: Date.now() };
   
   const updatedArticle = await ArticleModel.findByIdAndUpdate(id, updateData, { new: true }).populate('category', 'name'); // Populate category information
