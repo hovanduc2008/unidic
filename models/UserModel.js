@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
             type: Number,
             default: 2002
         },
-        Partern: Number,
+        Partner: Number,
         Admin: Number
     },
     isBlocked: {

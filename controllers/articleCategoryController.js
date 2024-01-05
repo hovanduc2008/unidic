@@ -80,7 +80,7 @@ const searchArticleCategories = asyncHandler(async (req, res) => {
 
     const queryConditions = {
       $or: [
-        { name: { $regex: queryParams.name || '' $options: 'i' } },
+        { name: { $regex: queryParams.name || '', $options: 'i' } },
         { slug: { $regex: queryParams.slug || '', $options: 'i' } },
         { _id: queryParams.id }
       ]
