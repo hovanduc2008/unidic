@@ -45,43 +45,37 @@ const generateAudiofromText = asyncHandler(async (req, res) => {
       res.status(500).send('Đã xảy ra lỗi khi chuyển đổi văn bản thành âm thanh.');
     }
 })
+
 const generateTextFromAudio = asyncHandler(async (req, res) => {
   try {
-    const voice = req.body.voice ?? 'myan';
-    const speed = req.body.speed ?? 0;
-    const format = req.body.format ?? 'mp3';
+    // Check if a file is received from the request
+    const file = req.file;
 
-    // Create a new FormData instance
-    const formData = new FormData();
-
-    // Append the audio file to FormData
-    if (!req.body.audioFile) {
-      return res.status(400).send('Vui lòng cung cấp tệp âm thanh.');
+    console.log(file);
+    
+    if (!file) {
+        return res.status(400).send('No file uploaded');
     }
-    formData.append('audioFile', req.body.audioFile);
 
-    // Append other fields to FormData
-    formData.append('voice', voice);
-    formData.append('speed', speed.toString());
-    formData.append('format', format);
-    formData.append('X-TTS-NoCache', 'true');
+    const filePath = file.path;
 
-    // Send POST request with FormData
-    const response = await axios.post('https://api.fpt.ai/hmi/tts/v5', formData, {
+    const fileData = fs.readFileSync(filePath);
+
+    const response = await axios.post('https://api.fpt.ai/hmi/asr/general', fileData, {
       headers: {
-        ...formData.getHeaders(),
-        'api_key': TEXT_TO_SPEECH
+          'Content-Type': 'application/octet-stream',
+          'api_key': TEXT_TO_SPEECH,
+          'X-TTS-NoCache': true
       }
     });
 
-    // Handle response as needed
-    console.log(response.data);
-    return res.json(response.data);
+    return res.json(response.data); // Return specific data to the client
   } catch (error) {
     console.error('Lỗi:', error);
-    res.status(500).send('Đã xảy ra lỗi khi chuyển đổi văn bản thành âm thanh.');
+    return res.status(500).send('Đã xảy ra lỗi khi chuyển đổi âm thanh thành văn bản.');
   }
 });
+
 
 
 
