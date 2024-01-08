@@ -41,14 +41,8 @@ const getArticleById = asyncHandler(async (req, res) => {
 // UPDATE: Cập nhật thông tin một bài viết
 const updateArticle = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, description, content, thumbnail, image, category } = req.body;
+  const { title, description, content, slug, thumbnail, image, category } = req.body;
   
-  // Tạo lại slug từ title sử dụng slugify
-  const slug = slugify(title, {
-    lower: true,  // Chuyển đổi slug thành chữ thường
-    remove: /[*+~.()'"!:@]/g  // Loại bỏ các ký tự không mong muốn khỏi slug
-  });
-
   const updateData = { title, description, content, slug, thumbnail, image, category, updatedAt: Date.now() };
   
   const updatedArticle = await ArticleModel.findByIdAndUpdate(id, updateData, { new: true }).populate('category', 'name'); // Populate category information

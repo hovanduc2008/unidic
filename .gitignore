@@ -2,3 +2,4 @@
 config.ini
 /logs/
 /.env
+/public/videos

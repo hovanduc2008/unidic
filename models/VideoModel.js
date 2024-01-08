@@ -8,13 +8,13 @@ const videoSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    source: {
-        type: String,
-        required: true
+    webContentLink: {
+      type: String,
+      required: true
     },
-    download: {
-        type: String,
-        required: true
+    webViewLink: {
+      type: String,
+      required: true
     },
     deleted: {
       type: Boolean,
