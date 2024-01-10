@@ -1,44 +1,44 @@
 const asyncHandler = require('express-async-handler');
-const jwt = require('jsonwebtoken')
-
-const cookieOptions = require('../config/cookieOptions')
-const User = require('../models/UserModel')
-const {generateRefreshToken} = require('../config/refreshToken')
-const {generateAccessToken} = require('../config/accessToken');
+const jwt = require('jsonwebtoken');
+const cookieOptions = require('../config/cookieOptions');
+const User = require('../models/UserModel');
+const { generateRefreshToken } = require('../config/refreshToken');
+const { generateAccessToken } = require('../config/accessToken');
 const validateMongoDBId = require('../ultils/validateMongoDBId');
-
-
 const { paginate, picker } = require('../config/common');
-
-
 
 // Create new User
 const createUser = asyncHandler(async (req, res) => {
     const email = req.body.email;
+    const foundUser = await User.findOne({ email });
 
-    const foundUser = await User.findOne({email});
-    
     if (!foundUser) {
         const newUser = await User.create(req.body);
         res.json(newUser);
-    }else {
-        throw new Error('User already exists');
+    } else {
+        return res.status(400).json({
+            "message": "User already exists with the provided email."
+        });
     }
-})
+});
 
 // Login User
 const loginUser = asyncHandler(async (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({
             "message": "Email or Password are required!"
-        })
+        });
     }
 
-    const foundUser = await User.findOne({email});
+    const foundUser = await User.findOne({ email });
 
-    if (!foundUser) return res.sendStatus(401);
+    if (!foundUser) {
+        return res.status(401).json({
+            "message": "Invalid credentials. User not found."
+        });
+    }
 
     if (await foundUser.isPasswordMatched(password)) {
         const accessToken = generateAccessToken({
@@ -48,54 +48,59 @@ const loginUser = asyncHandler(async (req, res) => {
             }
         });
         const refreshToken = generateRefreshToken(foundUser?._id);
-        
-        const updateuser = await User.findByIdAndUpdate(
+
+        await User.findByIdAndUpdate(
             foundUser.id,
-            {
-              refreshToken: refreshToken,
-            },
+            { refreshToken: refreshToken },
             { new: true }
         );
 
         res.cookie("refreshToken", refreshToken, cookieOptions);
-
-        res.json({
-            accessToken
+        res.json({ accessToken,
+            data: foundUser
         });
-    }else {
-        return res.sendStatus(401);
+    } else {
+        return res.status(401).json({
+            "message": "Invalid credentials. Password does not match."
+        });
     }
-
-})
-
+});
 
 // Refresh Token
 const handleRefreshToken = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
-    if(!cookie?.refreshToken) throw new Error(`No Refresh Token in Cookies`);
+    if (!cookie?.refreshToken) throw new Error(`No Refresh Token in Cookies`);
+    
     const refreshToken = cookie.refreshToken;
-    const foundUser = await User.findOne({refreshToken});
-    if (!foundUser) throw new Error(`No refresh token present in DB or not matched`);
+    const foundUser = await User.findOne({ refreshToken });
+
+    if (!foundUser) throw new Error(`Refresh token not found or does not match any user.`);
+
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decode) => {
-        if(err || decode.id !== foundUser.id) {
-            throw new Error(`There is something wrong with refresh token`)
+        if (err || decode.id !== foundUser.id) {
+            throw new Error(`There is an issue with the provided refresh token.`);
         }
+        
         const accessToken = generateAccessToken({
             userInfo: {
                 id: foundUser.id,
                 roles: Object.values(foundUser.roles)
             }
         });
-        res.json({ accessToken });
-    })
-})
+        
+        res.json({ accessToken,
+            foundUser });
+    });
+});
 
 // Logout User
-const logoutUser = asyncHandler (async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
     if (!cookie?.refreshToken) throw new Error(`No RefreshToken in Cookies`);
+    
     const refreshToken = cookie.refreshToken;
-    const foundUser = await User.findOne({refreshToken});
+    const foundUser = await User.findOne({ refreshToken });
+    
     if (!foundUser) {
         res.clearCookie("refreshToken", cookieOptions);
         return res.sendStatus(204);
@@ -106,110 +111,99 @@ const logoutUser = asyncHandler (async (req, res) => {
 
     res.clearCookie("refreshToken", cookieOptions);
     res.sendStatus(204);
-})
+});
 
 // Get All Users
 const getAllUsers = asyncHandler(async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.perpage) || 10;
-
+        
         const result = await paginate(User, {}, page, perPage, picker([]));
-
-        if(!result || result.data.length < 1) return res.status(404).json({ message: 'Không tìm thấy dữ liệu.' });
+        
+        if (!result || result.data.length < 1) return res.status(404).json({ message: 'Không tìm thấy dữ liệu.' });
         
         return res.json(result);
-    }catch (err) {
+    } catch (err) {
         throw new Error(err);
     }
-})
+});
 
 // Get a single User
 const getUser = asyncHandler(async (req, res) => {
-    const {id} = req.params;
+    const { id } = req.params;
     validateMongoDBId(id);
 
     try {
         const foundUser = await User.findById(id);
         if (!foundUser) return res.sendStatus(204);
+        
         res.json(foundUser);
-    }catch (err) {
+    } catch (err) {
         throw new Error(err);
     }
-})
+});
 
 // Delete a single User
-
-const deleteUser = asyncHandler (async (req, res) => {
+const deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongoDBId(id);
 
     try {
         const deleteU = await User.findByIdAndDelete(id);
         res.json(deleteU);
-    }catch (err) {
+    } catch (err) {
         throw new Error(err);
     }
-})
+});
 
 // Block a User
-
 const blockUser = asyncHandler(async (req, res) => {
-    const {id} = req.params;
+    const { id } = req.params;
     validateMongoDBId(id);
 
     try {
-        const blockU = await User.findByIdAndUpdate(id, {
-            isBlocked: true
-        },
-        {
-            new: true
-        })
-
+        const blockU = await User.findByIdAndUpdate(id, { isBlocked: true }, { new: true });
         res.json(blockU);
-    }catch (err) {
+    } catch (err) {
         throw new Error(err);
     }
-})
+});
 
 // UnBlock User
-
-const unBlockUser = asyncHandler (async (req, res) => {
-    const {id} = req.params;
+const unBlockUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
     validateMongoDBId(id);
 
     try {
-        await User.findByIdAndUpdate(id, {
-            isBlocked: false
-        },
-        {
-            new: true
-        })
-
-        res.json({message: 'User Unblocked'});
-    }catch (err) {
+        await User.findByIdAndUpdate(id, { isBlocked: false }, { new: true });
+        res.json({ message: 'User Unblocked' });
+    } catch (err) {
         throw new Error(err);
     }
-})
+});
 
 // Update Password
 const updatePassword = asyncHandler(async (req, res) => {
-    const {id} = req.userInfo;
+    const { id } = req.userInfo;
     validateMongoDBId(id);
-    const {password} = req.body;
+    const { password } = req.body;
 
     try {
-        const foundUser = await User.findOne({_id: id});
+        const foundUser = await User.findOne({ _id: id });
+        if (!foundUser) return res.sendStatus(204);
+        
         foundUser.password = password;
         const updatePwd = await foundUser.save();
+        
         res.json(updatePwd);
-    }catch (err) {
+    } catch (err) {
         throw new Error(err);
     }
-})
+});
 
 module.exports = {
-    createUser, 
+    createUser,
     loginUser,
     handleRefreshToken,
     logoutUser,
@@ -219,4 +213,4 @@ module.exports = {
     blockUser,
     unBlockUser,
     updatePassword
-}
+};

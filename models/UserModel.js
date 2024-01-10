@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
 }
 )
 
-const disable = "-password -refreshToken";
+const disable = "";
 
 userSchema.pre('find', function(next) {
     this.select(disable); // Loại bỏ các trường 'password' và 'refreshToken'
