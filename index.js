@@ -6,19 +6,17 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const http = require('http');
 
 const {errorHandler} = require('./middlewares/errorHandler');
 const corsOptions = require('./config/corsOptions');
 const verifyJWT = require('./middlewares/verifyJWT')
 const connectDB = require('./config/dbConn')
+const { initializeSocket } = require('./config/services/socket');
 
 const PORT = process.env.PORT || 3500;
 const app = express();
-const http = require('http');
-const server = http.createServer(app);
-
-const { Server } = require("socket.io");
-const io = new Server(server);
+const server = http.Server(app);
 
 // Logger
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'logs', 'access.log'), { flags: 'a' })
@@ -46,6 +44,8 @@ app.use('/', express.static(path.join(__dirname, 'public')))
 app.use(cookieParser());
 
 
+//initializeSocket
+initializeSocket(server);
 // Route
 app.use('/user', require('./routes/authRoute'));
 app.use('/articlecategory', require('./routes/articleCategoryRoute'));
@@ -67,6 +67,9 @@ app.use('/review', require('./routes/reviewRoute'));
 app.use('/schedule', require('./routes/scheduleRoute'));
 app.use('/tableofcontent', require('./routes/tableOfContentRoute'));
 
+
+
+
 app.use(verifyJWT);
 app.use('/', require('./routes/root'));
 
@@ -87,13 +90,9 @@ app.all('*', (req, res) => {
 
 app.use(errorHandler);
 
-io.on('connection', (socket) => {
-    console.log('a user connected');
-});
-
 mongoose.connection.once("open", () => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`Server listening on ${PORT}`);
     })
 })

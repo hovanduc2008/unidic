@@ -1,14 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const ChatModel = require('../models/ChatModel'); // Đường dẫn tới model của bạn
+const { initializeSocket } = require('../config/services/socket');
 
 // CREATE: Gửi một tin nhắn mới
 const sendMessage = asyncHandler(async (req, res) => {
   const { sender, receiver, message } = req.body;
-  
-  // Tạo một tin nhắn mới
   const chatMessage = new ChatModel({ sender, receiver, message });
+  console.log('Hello')
   await chatMessage.save();
-  
+  req.io.emit('receive-message', chatMessage);
   res.status(201).json(chatMessage);
 });
 

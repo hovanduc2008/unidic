@@ -15,9 +15,11 @@ const paginate = async (model, query = {}, page = 1, perPage = 10, picker = []) 
     const skip = (page - 1) * perPage;
     
     try {
+        const sort = getSortCondition(query.sort);
+
         const totalRow = await model.countDocuments(query);
         const totalPages = Math.ceil(totalRow / perPage);
-        const data = await model.find(query, picker).skip(skip).limit(perPage);
+        const data = await model.find(query.search, picker).sort(sort).skip(skip).limit(perPage);
 
         return {
             perPage,
@@ -30,6 +32,25 @@ const paginate = async (model, query = {}, page = 1, perPage = 10, picker = []) 
         throw new Error('Lỗi khi thực hiện phân trang');
     }
 };
+
+const getSortCondition = function($value) {
+    switch ($value) {
+        case 'latest':
+            return { createdAt: -1 };
+        case 'oldest':
+            return { createdAt: 1 };
+        case 'price_asc':
+            return { price: 1 };
+        case 'price_desc':
+            return { price: -1 };
+        case 'a_z':
+            return { name: 1 };
+        case 'z_a':
+            return { name: -1 };
+        default:
+            return { createdAt: -1 };
+    }
+}
 
 const picker = (fields) => {
     // Nếu mảng fields chứa dấu '*' thì trả về toàn bộ trường

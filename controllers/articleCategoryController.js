@@ -31,7 +31,10 @@ const getCategories = asyncHandler(async (req, res) => {
     return res.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy danh mục.' });
+    return res.status(500).json({ 
+      message: 'Đã xảy ra lỗi khi lấy danh mục.',
+      error: error.message
+    });
   }
 });
 
@@ -78,26 +81,39 @@ const searchArticleCategories = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const perPage = parseInt(req.query.perpage) || 10;
 
-    const queryConditions = {
-      $or: [
-        { name: { $regex: queryParams.name || '', $options: 'i' } },
-        { slug: { $regex: queryParams.slug || '', $options: 'i' } },
-        { _id: queryParams.id }
-      ]
-    };
+    const queryConditions = {};
 
-    console.log(queryParams.name)
+    if (queryParams.q) {
+      queryConditions.$or = [
+        { name: { $regex: queryParams.q, $options: 'i' } },
+        { slug: { $regex: queryParams.q, $options: 'i' } }
+      ];
+    }
 
-    const articleCategories = await paginate(ArticleCategoryModel, queryConditions, page, perPage);
+    const articleCategories = await paginate(ArticleCategoryModel, {
+      search: queryConditions,
+      sort: queryParams.sort
+    }, page, perPage);
+
     if (!articleCategories || articleCategories.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy danh mục bài viết.' });
     }
+
     return res.status(200).json(articleCategories);
+
   } catch (error) {
+    // Kiểm tra lỗi và xử lý nếu cần
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'ID không hợp lệ.' });
+    }
+
+    // Thêm xử lý cho các lỗi khác mà bạn mong muốn xử lý
     console.error('Error searching article categories:', error);
+    
     return res.status(500).json({ message: 'Đã xảy ra lỗi khi tìm kiếm danh mục bài viết.' });
   }
 });
+
 
 module.exports = {
   createCategory,
