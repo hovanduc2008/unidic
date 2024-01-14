@@ -44,17 +44,6 @@ const eventSchema = new mongoose.Schema({
     trim: true
   },
   
-  // Ngày tạo sự kiện
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  
-  // Ngày cập nhật lần cuối của sự kiện
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
   // Tự động cập nhật thời gian khi có sự thay đổi
   timestamps: true

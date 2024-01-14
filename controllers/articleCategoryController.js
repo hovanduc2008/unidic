@@ -114,11 +114,46 @@ const searchArticleCategories = asyncHandler(async (req, res) => {
   }
 });
 
+const findById = asyncHandler(async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const category = await ArticleCategoryModel.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    return res.json(category);
+  } catch (error) {
+    // Handle specific errors if needed
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'ID không hợp lệ.' });
+    }
+
+    console.error('Error searching category by ID:', error);
+    return res.status(500).json({ error: 'Failed to search category by ID' });
+  }
+});
+
+const findBySlug = asyncHandler(async (req, res) => {
+  try {
+    const categorySlug = req.params.slug;
+    const category = await ArticleCategoryModel.findOne({ slug: categorySlug });
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    return res.json(category);
+  } catch (error) {
+    console.error('Error searching category by Slug:', error);
+    return res.status(500).json({ error: 'Failed to search category by Slug' });
+  }
+});
+
 
 module.exports = {
   createCategory,
   getCategories,
   updateCategory,
   deleteCategory,
-  searchArticleCategories
+  searchArticleCategories,
+  findById,
+  findBySlug 
 };

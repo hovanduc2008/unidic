@@ -6,14 +6,19 @@ const {
     getCategories,
     updateCategory,
     deleteCategory,
-    searchArticleCategories
+    searchArticleCategories,
+    findById,
+    findBySlug
 } 
 = require('../controllers/articleCategoryController');
 
 router.post('/', createCategory);
 router.get('/getall', getCategories);
 router.get('/search', searchArticleCategories);
+router.get('/:id', findById);
+router.get('/slug/:slug', findBySlug);
 router.put('/:id', updateCategory);
 router.delete('/:id', deleteCategory);
+
 
 module.exports = router;

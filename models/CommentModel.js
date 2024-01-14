@@ -14,6 +14,10 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+
+  parentId: {
+    type: mongoose.Schema.Types.ObjectId,
+  },
   
   // ID của bài viết hoặc phần mà bình luận được đăng
   postId: {

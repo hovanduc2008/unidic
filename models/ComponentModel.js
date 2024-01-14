@@ -28,17 +28,6 @@ const componentSchema = new mongoose.Schema({
     trim: true
   },
   
-  // Ngày tạo thành phần
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  
-  // Ngày cập nhật lần cuối của thành phần
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
   // Tự động cập nhật thời gian khi có sự thay đổi
   timestamps: true
