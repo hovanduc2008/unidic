@@ -17,7 +17,7 @@ const paginate = async (model, query = {}, page = 1, perPage = 10, picker = []) 
     try {
         const sort = getSortCondition(query.sort);
 
-        const totalRow = await model.countDocuments(query);
+        const totalRow = await model.countDocuments(query.search);
         const totalPages = Math.ceil(totalRow / perPage);
         const data = await model.find(query.search, picker).sort(sort).skip(skip).limit(perPage);
 
