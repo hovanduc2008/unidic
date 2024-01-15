@@ -13,7 +13,7 @@ const createCategory = asyncHandler(async (req, res) => {
       return res.status(400).json({ error: 'Tên danh mục là bắt buộc.' });
     }
     const slug = slugify(name, { lower: true, remove: /[*+~.()'"!:@]/g });
-    const category = new ArticleCategoryModel({ name, slug });
+    const category = new ArticleCategoryModel({ slug, ...req.body });
     await category.save();
     return res.status(201).json(category);
   } catch (error) {
