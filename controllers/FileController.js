@@ -40,34 +40,12 @@ const self = module.exports = {
     },
     uploadImageHandler: async (file) => {
         try {
-            // Read the image file
-            const imageBuffer = fs.readFileSync(path.join(__dirname, '../public/temporary/' + file.filename));
-    
-            // Process the image (resize with aspect ratio)
-            const processedImageBuffer = await sharp(imageBuffer)
-                .resize(700, null) // Set the desired width and maintain aspect ratio
-                .toBuffer();
-    
-            // Convert the buffer to a readable stream
-            const readableStream = new stream.PassThrough();
-            readableStream.end(processedImageBuffer);
-    
-            // Upload the processed image
-            const createFile = await drive.files.create({
-                requestBody: {
-                    name: file.originalname,
-                    mimeType: file.mimetype,
-                    parents: ['1Amz0QkY47rBL-DICH-NfX26wYfFt8H8W']
-                },
-                media: {
-                    mimeType: 'image/jpg',
-                    body: readableStream
-                }
-            });
-
-            const url = await self.setFilePublic(createFile.data.id);
             return {
-                url: url.data,
+                url: {
+                    webContentLink: process.env.HOST+'/images/' + file.filename,
+                    thumbnailLink: process.env.HOST+'/images/' + file.filename,
+                    webViewLink: process.env.HOST+'/images/' + file.filename + '?export=download'
+                },
                 mimeType: file.mimetype
             };
         } catch (error) {

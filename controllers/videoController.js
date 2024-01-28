@@ -11,6 +11,7 @@ const {uploadVideoHandler} = require('./FileController');
 
 const uploadVideo = asyncHandler(async (req, res) => {
     const file = req.file;
+
     
     if (!file) {
         return res.status(400).send('No file uploaded');

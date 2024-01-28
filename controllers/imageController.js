@@ -33,13 +33,6 @@ const uploadImage = asyncHandler(async (req, res) => {
                     mimeType: fileUrl.mimeType
                 }
             );
-
-            // Xóa file sau khi upload thành công
-            fs.unlink(filePath, (err) => {
-                if (err) {
-                    console.error('Error deleting file:', err);
-                }
-            });
         } catch (error) {
             console.error('Error uploading file:', error);
         }

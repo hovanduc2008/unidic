@@ -3,7 +3,7 @@ const fs = require('fs');
 
   const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      const directory = 'public/temporary';
+      const directory = 'public/images';
 
       // Kiểm tra sự tồn tại của thư mục
       if (!fs.existsSync(directory)) {
@@ -14,7 +14,10 @@ const fs = require('fs');
       cb(null, directory);
     },
     filename: async function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname);
+      const fileExtension = file.originalname.split('.').pop(); // Lấy phần mở rộng của tệp
+      const formattedDate = new Date().toISOString().replace(/[-T:.Z]/g, ''); // Định dạng ngày và giờ hiện tại
+      const customFilename = `image_${formattedDate}.${fileExtension}`;
+      cb(null, customFilename);
     }
   });
 

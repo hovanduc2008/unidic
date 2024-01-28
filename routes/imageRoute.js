@@ -16,6 +16,7 @@ const {
 router.post('/upload',upload.array('files[]'), uploadImage);
 router.get('/:id', getImage);
 
+
 // Post mảng ids là id của image
 router.post('/gets', getImages);
 
